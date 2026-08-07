@@ -1,0 +1,11 @@
+# Compiled binary
+/squash-tc-gen
+
+# Generated output files (test artifacts, not source)
+*.xlsx
+!examples/*.xlsx
+
+# OS / editor
+.DS_Store
+.vscode/
+*.swp
