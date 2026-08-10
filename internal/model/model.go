@@ -4,14 +4,14 @@
 package model
 
 // Suite represents one Squash TM folder worth of test cases (typically
-// one user story, e.g. "SUT-002 - Filter Systems under test list").
+// one user story, e.g. "EX-001 - Filter items list").
 type Suite struct {
-	// Project is the Squash TM project name, e.g. "Gazelle v2".
+	// Project is the Squash TM project name, e.g. "My Project".
 	Project string `yaml:"project"`
 
 	// FolderPath is the full path of the target folder in the Test Case
 	// workspace, e.g.:
-	// "/Gazelle v2/Sut registry/01 - My organization's SUT/SUT-002 - Filter Systems under test list"
+	// "/My Project/My Feature/01 - My organization's Folder/EX-001 - Filter items list"
 	FolderPath string `yaml:"folder_path"`
 
 	// Reference is written into TC_REFERENCE for every test case in this

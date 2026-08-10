@@ -1,8 +1,8 @@
 // Package generator builds a Squash TM-compatible import .xlsx file
 // (TEST_CASES / STEPS / PARAMETERS / DATASETS / LINK_REQ_TC tabs) from a
 // model.Suite. Column headers are the REAL ones confirmed by exporting an
-// existing folder from the target Squash TM instance (Gazelle v2) on
-// 2026-08-07 — do not "guess-fix" them without re-checking a fresh export.
+// existing folder from a real Squash TM instance on 2026-08-07 — do not
+// "guess-fix" them without re-checking a fresh export.
 package generator
 
 import (

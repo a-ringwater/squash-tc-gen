@@ -3,7 +3,7 @@
 //
 // Usage:
 //
-//	squash-tc-gen -in examples/sut-002.yaml -out import_SUT-002.xlsx
+//	squash-tc-gen -in examples/example.yaml -out import.xlsx
 package main
 
 import (

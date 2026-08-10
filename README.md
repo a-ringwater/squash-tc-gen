@@ -1,13 +1,12 @@
-# squash-tc-gen
+# 🧪 squash-tc-gen
 
 CLI Go qui génère un fichier Excel prêt à importer dans Squash TM (format
 `TEST_CASES` / `STEPS` / `PARAMETERS` / `DATASETS` / `LINK_REQ_TC`) à partir
 d'un fichier YAML décrivant les cas de test d'une story.
 
-Projet réalisé pour automatiser la rédaction de cas de test manuels
-(feature "SUT Registry") tout en apprenant Go.
+Projet réalisé pour automatiser la rédaction de cas de test manuels.
 
-## Pourquoi
+## 💡 Pourquoi
 
 Écrire les cas de test à la main dans l'IHM Squash TM est répétitif, et le
 copier-coller depuis un tableau externe est source d'erreurs (chemins,
@@ -16,15 +15,14 @@ description structurée en YAML et produit directement le fichier d'import
 au bon format.
 
 Les en-têtes de colonnes utilisées ici (`TC_WEIGHT`, `TC_PRE_REQUISITE`,
-`TC_OWNER_PATH`, etc.) ont été confirmées en exportant un dossier existant
-depuis une instance Squash TM réelle — **si tu changes d'instance ou de
+`TC_OWNER_PATH`, etc.) — **si tu changes d'instance ou de
 version Squash TM, ré-exporte un dossier existant et compare les en-têtes**
 avant de faire confiance à ce générateur.
 
-## Installation
+## ⚙️ Installation
 
 ```bash
-git clone <ton-repo>
+git clone https://github.com/a-ringwater/squash-tc-gen.git
 cd squash-tc-gen
 go mod tidy
 go build -o squash-tc-gen .
@@ -32,10 +30,10 @@ go build -o squash-tc-gen .
 
 Prérequis : Go >= 1.22.
 
-## Usage
+## 🚀 Usage
 
 ```bash
-./squash-tc-gen -in examples/sut-002.yaml -out import_SUT-002.xlsx
+./squash-tc-gen -in examples/example.yaml -out import.xlsx
 ```
 
 | Flag | Description | Défaut |
@@ -43,14 +41,14 @@ Prérequis : Go >= 1.22.
 | `-in`  | Chemin du fichier YAML d'entrée (obligatoire) | — |
 | `-out` | Chemin du fichier `.xlsx` généré | `import.xlsx` |
 
-## Format d'entrée (YAML)
+## 📄 Format d'entrée (YAML)
 
-Voir [`examples/sut-002.yaml`](examples/sut-002.yaml) pour un exemple complet.
+Voir [`examples/example.yaml`](examples/example.yaml) pour un exemple complet.
 
 ```yaml
-project: "Gazelle v2"
-folder_path: "/Gazelle v2/Sut registry/01 - My organization's SUT/SUT-00x - ..."
-reference: "SUT-00x"
+project: "Mon Projet"
+folder_path: "/Mon Projet/Ma Feature/01 - Mon dossier/EX-00x - ..."
+reference: "EX-00x"
 requirement_path: ""   # optionnel — chemin de l'exigence côté espace Exigences
 
 test_cases:
@@ -60,10 +58,15 @@ test_cases:
     steps:
       - action: "..."
         expected: "..."
+```
 
-    # Optionnel : pour regrouper plusieurs Business Rules à logique
-    # identique (ne différant que par une valeur) dans un seul cas de
-    # test paramétré, plutôt que de dupliquer le cas de test.
+### Cas avancé : cas de test paramétrés
+
+Pour regrouper plusieurs Business Rules à logique identique (ne différant
+que par une valeur) dans un seul cas de test, plutôt que de dupliquer le
+cas de test, ajoute `parameters` et `datasets` :
+
+```yaml
     parameters: ["MON_PARAM"]
     datasets:
       - name: "Cas A"
@@ -76,27 +79,16 @@ Utilise `{MON_PARAM}` dans `action`/`expected`/`prereq` pour référencer un
 paramètre — Squash TM substituera la valeur au moment de l'exécution du
 jeu de données correspondant.
 
-## Import dans Squash TM
+## 📥 Import dans Squash TM
 
 1. Génère le fichier avec cette CLI.
 2. Dans Squash TM, espace **Cas de test** > bouton **Importer/Exporter** >
-   **Importer** (réservé aux profils Administrateur / Chef de projet).
+   **Importer**.
 3. **Lance la simulation** avant de valider, pour repérer tout conflit de
    nommage dans le dossier cible.
 4. Valide l'import.
 
-## Note réseau (contournement, pas à reproduire en usage normal)
-
-Ce projet a été développé dans un environnement sandbox n'autorisant pas
-l'accès à `proxy.golang.org` ni `golang.org`. Le `go.mod` contient donc des
-directives `replace` redirigeant certaines dépendances transitives
-(`golang.org/x/*`, `gopkg.in/*`) vers leurs miroirs GitHub. **Sur une
-machine avec un accès internet normal, ces `replace` ne sont probablement
-pas nécessaires** — tu peux les supprimer et relancer `go mod tidy` pour
-obtenir un `go.mod` "propre". Elles ne posent aucun problème si tu les
-gardes, cela dit.
-
-## Structure du projet
+## 🗂️ Structure du projet
 
 ```
 .
@@ -105,15 +97,11 @@ gardes, cela dit.
 │   ├── model/model.go          # Structures de données (Suite, TestCase, Step, Dataset)
 │   └── generator/generator.go  # Génération du .xlsx via excelize
 └── examples/
-    └── sut-002.yaml            # Exemple d'entrée
+    └── example.yaml            # Exemple d'entrée
 ```
 
-## Limites connues / pistes d'évolution
+## ⚠️ Limites connues
 
-- `TC_NATURE`, `TC_TYPE`, `TC_MILESTONE`, `TC_AUTOMATABLE` ne sont pas
-  renseignés (laissés vides) pour éviter une erreur d'import si les codes
-  de listes personnalisées diffèrent d'un projet à l'autre. À ajouter dans
-  le modèle si besoin.
-- Pas de génération automatique de `LINK_REQ_TC` multi-exigences (une seule
-  exigence par suite pour l'instant).
-- Pas de tests unitaires Go pour l'instant (`generator_test.go` à écrire).
+- Une seule exigence liée par suite de test (pas de `LINK_REQ_TC`
+  multi-exigences).
+- Les champs `TC_NATURE`, `TC_TYPE`, `TC_MILESTONE`, `TC_AUTOMATABLE` sont laissés vides pour éviter une erreur d'import si les listes personnalisées diffèrent d'un projet à l'autre.

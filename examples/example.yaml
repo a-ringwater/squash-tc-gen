@@ -1,0 +1,88 @@
+project: "My Project"
+folder_path: "/My Project/My Feature/01 - My organization's Folder/EX-001 - Filter items list"
+reference: "EX-001"
+
+test_cases:
+  - title: '[BR-1] Filter item list by "name" criteria'
+    weight: HIGH
+    prereq: >-
+      User is on the "Items" list, with several items displayed, including at
+      least one with a known name.
+    steps:
+      - action: 'Enter the exact name of an existing item in the "name" search field.'
+        expected: "Only the item(s) whose name exactly matches the entered value are displayed."
+      - action: "Clear the field and enter a partial substring of an existing item name."
+        expected: "All items whose name partially matches (contains) the entered substring are displayed."
+
+  - title: '[BR-2] Filter item list by "version" criteria'
+    weight: MEDIUM
+    prereq: >-
+      User is on the "Items" list, with several items displayed, including at
+      least one with a known version.
+    steps:
+      - action: 'Enter the exact version of an existing item in the "version" search field.'
+        expected: "Only the item(s) whose version exactly matches the entered value are displayed."
+      - action: "Clear the field and enter a partial substring of an existing item version."
+        expected: "All items whose version partially matches (contains) the entered substring are displayed."
+
+  - title: '[BR-3] Filter item list by "status" criteria'
+    weight: HIGH
+    prereq: >-
+      The list contains at least one item for each of the three statuses
+      (Draft, Active, Archived).
+    steps:
+      - action: 'Select {STATUS_VALUE} as the "status" search criteria.'
+        expected: "Only the items whose status matches {STATUS_VALUE} are displayed."
+    parameters:
+      - STATUS_VALUE
+    datasets:
+      - name: "Draft"
+        values:
+          STATUS_VALUE: "Draft"
+      - name: "Active"
+        values:
+          STATUS_VALUE: "Active"
+      - name: "Archived"
+        values:
+          STATUS_VALUE: "Archived"
+
+  - title: "[BR-4,5] Filter item list by attribute (category / owner)"
+    weight: HIGH
+    prereq: >-
+      At least one item has an attribute whose {CRITERIA_LABEL} (name or
+      identifier) matches a known test value.
+    steps:
+      - action: 'Enter the exact value for the "{CRITERIA_LABEL}" search field.'
+        expected: "All items having at least one attribute whose {CRITERIA_LABEL} (name or identifier) exactly matches the entered value are displayed."
+      - action: 'Clear the field and enter a partial value for "{CRITERIA_LABEL}".'
+        expected: "All items having at least one attribute whose {CRITERIA_LABEL} (name or identifier) partially matches the entered value are displayed."
+    parameters:
+      - CRITERIA_LABEL
+    datasets:
+      - name: "category"
+        values:
+          CRITERIA_LABEL: "category"
+      - name: "owner"
+        values:
+          CRITERIA_LABEL: "owner"
+
+  - title: '[BR-6,7] Filter item list by "Has errors ?" criteria'
+    weight: HIGH
+    prereq: >-
+      The list contains at least one item flagged as having errors and at
+      least one item not flagged as such.
+    steps:
+      - action: 'Select "{FILTER_VALUE}" for the "Has errors ?" criteria.'
+        expected: "{EXPECTED_RESULT}"
+    parameters:
+      - FILTER_VALUE
+      - EXPECTED_RESULT
+    datasets:
+      - name: "Yes"
+        values:
+          FILTER_VALUE: "Yes"
+          EXPECTED_RESULT: "All items flagged as having errors are displayed."
+      - name: "No"
+        values:
+          FILTER_VALUE: "No"
+          EXPECTED_RESULT: "All items not flagged as having errors are displayed."
