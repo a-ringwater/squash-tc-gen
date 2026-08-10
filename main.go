@@ -7,6 +7,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -18,6 +19,9 @@ import (
 )
 
 func main() {
+	// flag.String returns a *string, not a string: flag.Parse() below fills
+	// it in later once os.Args has actually been read, so at declaration
+	// time we only get the address of where the value will end up.
 	inputPath := flag.String("in", "", "path to the input YAML file (required)")
 	outputPath := flag.String("out", "import.xlsx", "path to the generated .xlsx file")
 	flag.Parse()
@@ -34,13 +38,19 @@ func main() {
 	}
 }
 
+// run holds the actual program logic, kept separate from main so it stays
+// testable: main calls os.Exit, which a test cannot easily intercept.
 func run(inputPath, outputPath string) error {
 	data, err := os.ReadFile(inputPath)
 	if err != nil {
+		// %w (not %v) wraps err instead of just stringifying it, so a
+		// caller could still errors.Is/As into the original error.
 		return fmt.Errorf("reading %s: %w", inputPath, err)
 	}
 
 	var suite model.Suite
+	// &suite: Unmarshal must write into our variable, so it needs a
+	// pointer to it rather than a copy.
 	if err := yaml.Unmarshal(data, &suite); err != nil {
 		return fmt.Errorf("parsing YAML: %w", err)
 	}
@@ -57,22 +67,44 @@ func run(inputPath, outputPath string) error {
 	return nil
 }
 
+// validWeights is the set of accepted TestCase.Weight values, used as a
+// map[string]bool "set": a missing key reads as its zero value (false),
+// so validWeights[x] alone answers "is x in the set?". Declared once at
+// package level instead of rebuilt on every validate call.
+var validWeights = map[string]bool{"HIGH": true, "MEDIUM": true, "LOW": true}
+
+// validateDatasets checks that every dataset provides a value for each
+// parameter declared on tc. Split out of validate so its double loop keeps
+// its own nesting level instead of adding to validate's.
+func validateDatasets(tc model.TestCase) error {
+	for _, ds := range tc.Datasets {
+		for _, p := range tc.Parameters {
+			// comma-ok form: distinguishes "key present with an empty
+			// value" from "key absent entirely" — a plain ds.Values[p]
+			// would return "" for both cases.
+			if _, ok := ds.Values[p]; !ok {
+				return fmt.Errorf("dataset %q is missing a value for parameter %q", ds.Name, p)
+			}
+		}
+	}
+	return nil
+}
+
 // validate does a few sanity checks so mistakes in the YAML fail fast with a
 // clear message instead of producing a silently broken import file.
 func validate(s model.Suite) error {
 	if s.Project == "" {
-		return fmt.Errorf("project is required")
+		return errors.New("project is required")
 	}
 	if s.FolderPath == "" {
-		return fmt.Errorf("folder_path is required")
+		return errors.New("folder_path is required")
 	}
 	if len(s.TestCases) == 0 {
-		return fmt.Errorf("at least one test case is required")
+		return errors.New("at least one test case is required")
 	}
-	validWeights := map[string]bool{"HIGH": true, "MEDIUM": true, "LOW": true}
 	for _, tc := range s.TestCases {
 		if tc.Title == "" {
-			return fmt.Errorf("a test case has no title")
+			return errors.New("a test case has no title")
 		}
 		if !validWeights[tc.Weight] {
 			return fmt.Errorf("test case %q: weight must be HIGH, MEDIUM or LOW (got %q)", tc.Title, tc.Weight)
@@ -83,12 +115,11 @@ func validate(s model.Suite) error {
 		if len(tc.Datasets) > 0 && len(tc.Parameters) == 0 {
 			return fmt.Errorf("test case %q has datasets but no parameters declared", tc.Title)
 		}
-		for _, ds := range tc.Datasets {
-			for _, p := range tc.Parameters {
-				if _, ok := ds.Values[p]; !ok {
-					return fmt.Errorf("test case %q: dataset %q is missing a value for parameter %q", tc.Title, ds.Name, p)
-				}
-			}
+		if err := validateDatasets(tc); err != nil {
+			// validateDatasets' own error is generic ("dataset %q is
+			// missing..."); wrap it here to add which test case it came
+			// from, instead of passing tc.Title into that function.
+			return fmt.Errorf("test case %q: %w", tc.Title, err)
 		}
 	}
 	return nil
